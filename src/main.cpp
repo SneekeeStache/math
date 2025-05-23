@@ -18,9 +18,10 @@ int main()
         float cosResult = cos(random1);
         float resultSin = sin(random2);
         glm::vec2 direction = glm::vec2(cosResult,resultSin);
+        float mass = utils::rand(1,10);
         glm::vec2 gravity = glm::vec2(0,-9.81f)*mass;
-        float vitesse = utils::rand(1,1.5);
-        float mass = utils::rand(1,5);
+        glm::vec2 force= gravity;
+        glm::vec2 acceleration = force/ mass;
         
         
     };
@@ -41,6 +42,7 @@ int main()
         
         for(particule& i : listParticule){
             utils::draw_disk(i.position,0.01,glm::vec4(1,1,1,1));
+            i.direction+= i.acceleration * gl::delta_time_in_seconds();
             i.position+= i.direction * gl::delta_time_in_seconds();
             
         };
