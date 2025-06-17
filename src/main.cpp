@@ -29,6 +29,9 @@ int main()
         glm::vec2 acceleration;
         glm::vec2 friction;
         glm::vec2 spring;
+
+        float maximumAge = utils::rand(5.f,10.f);
+        float age = 0.f;
     };
     
 
@@ -46,13 +49,17 @@ int main()
         // TODO render particles
         
         for(particule& i : listParticule){
-            utils::draw_disk(i.position,0.01,glm::vec4(1,1,1,1));
+            if(i.age < i.maximumAge){
+                utils::draw_disk(i.position,0.01,glm::vec4(1,1,1,1));
+            }
             i.friction= -i.airFriction * i.direction;
             i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
             i.force = i.gravity + i.friction + i.spring;
             i.acceleration= i.force/ i.mass;
             i.direction+= i.acceleration * gl::delta_time_in_seconds();
             i.position+= i.direction * gl::delta_time_in_seconds();
+
+            i.age+= gl::delta_time_in_seconds();
             
         };
     }
