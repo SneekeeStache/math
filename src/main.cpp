@@ -35,6 +35,8 @@ int main()
 
         float radius=0.015f;
         float currentRadius;
+
+        glm::vec4 color = glm::vec4(utils::rand(0,1),utils::rand(0,1),utils::rand(0,1),1);
     };
     
 
@@ -54,7 +56,7 @@ int main()
         for(particule& i : listParticule){
             i.currentRadius= i.radius * (1.0f - i.age / i.maximumAge);
             if(i.age < i.maximumAge){
-                utils::draw_disk(i.position,i.currentRadius,glm::vec4(1,1,1,1));
+                utils::draw_disk(i.position,i.currentRadius,i.color);
             }
             i.friction= -i.airFriction * i.direction;
             i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
