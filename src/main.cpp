@@ -32,6 +32,9 @@ int main()
 
         float maximumAge = utils::rand(5.f,10.f);
         float age = 0.f;
+
+        float radius=0.015f;
+        float currentRadius;
     };
     
 
@@ -49,8 +52,9 @@ int main()
         // TODO render particles
         
         for(particule& i : listParticule){
+            i.currentRadius= i.radius * (1.0f - i.age / i.maximumAge);
             if(i.age < i.maximumAge){
-                utils::draw_disk(i.position,0.01,glm::vec4(1,1,1,1));
+                utils::draw_disk(i.position,i.currentRadius,glm::vec4(1,1,1,1));
             }
             i.friction= -i.airFriction * i.direction;
             i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
