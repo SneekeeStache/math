@@ -18,6 +18,20 @@ glm::vec2 checkIntersect(glm::vec2 obj1Pos1,glm::vec2 obj1Pos2,glm::vec2 obj2Pos
     return result;
 }
 
+glm::vec2 getNormalWall(glm::vec2 wallPos1,glm::vec2 wallPos2){
+    glm::vec2 direction= wallPos2-wallPos1;
+    return glm::normalize(glm::vec2(-direction.y,direction.x));
+}
+
+
+glm::vec2 reflectParticule(glm::vec2 wallPos1,glm::vec2 wallPos2,glm::vec2 particulePos,glm::vec2 velocity){
+    glm::vec2 particuleDirection = particulePos - (particulePos * 1.1f);
+    glm::vec2 t=findT(wallPos1,wallPos2,particuleDirection,(particulePos * 1.1f));
+    glm::vec2 intersection = checkIntersect(wallPos1,wallPos2,particuleDirection,(particulePos * 1.1f));
+    glm::vec2 normal = getNormalWall(wallPos1,wallPos2);
+    return glm::reflect(velocity,normal);
+}
+
 /*
 glm::vec2 checkCircleIntersect(){
 
@@ -44,10 +58,10 @@ int main()
         float airFriction=3.0f;
         float SpringStiffness = 5.f;
         
-        glm::vec2 direction = glm::vec2(cosResult,resultSin);
+        glm::vec2 velocity = glm::vec2(cosResult,resultSin);
         
         float mass = utils::rand(1,5);
-        glm::vec2 gravity = glm::vec2(0,-0.1f)*mass;
+        glm::vec2 gravity = glm::vec2(0,-3.f)*mass;
         glm::vec2 force;
         glm::vec2 acceleration;
         glm::vec2 friction;
@@ -91,22 +105,7 @@ int main()
         // TODO update particles
         // TODO render particles
         
-        for(particule& i : listParticule){
-            i.currentRadius= i.radius * (1.0f - i.age / i.maximumAge);
-            if(i.age < i.maximumAge){
-                utils::draw_disk(i.position,i.currentRadius,i.color);
-            }
-            i.friction= -i.airFriction * i.direction;
-            i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
-            i.force = i.gravity + i.friction + i.spring;
-            i.acceleration= i.force/ i.mass;
-            i.direction+= i.acceleration * gl::delta_time_in_seconds();
-            i.position+= i.direction * gl::delta_time_in_seconds();
-
-            i.age+= gl::delta_time_in_seconds();
-            
-            
-        };
+        
         utils::draw_line(testwall.position1,testwall.position2,testwall.thickness,testwall.color);
         utils::draw_line(testFromMouse.position1,gl::mouse_position(),testFromMouse.thickness,testFromMouse.color);
         
@@ -118,6 +117,28 @@ int main()
         }
         
         std::cout << intersection.x << std::endl;
+
+        for(particule& i : listParticule){
+            i.currentRadius= i.radius * (1.0f - i.age / i.maximumAge);
+            if(i.age < i.maximumAge){
+                utils::draw_disk(i.position,i.currentRadius,i.color);
+            }
+            i.friction= -i.airFriction * i.velocity;
+            i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
+            i.force = i.gravity /*+ i.friction + i.spring*/;
+            i.acceleration= i.force/ i.mass;
+            i.velocity+= i.acceleration * gl::delta_time_in_seconds();
+            glm::vec2 tWallPartCheck=findT(testwall.position1,testwall.position2,i.position,(i.position * 1.1f));
+            if((tWallPartCheck.x >=0 && tWallPartCheck.x <= 1) && (tWallPartCheck.y >=0 && tWallPartCheck.y <= 1)){
+                i.velocity= reflectParticule(testwall.position1,testwall.position2,i.position,i.velocity);
+            }
+            i.position+= i.velocity * gl::delta_time_in_seconds();
+            
+
+            i.age+= gl::delta_time_in_seconds();
+            
+            
+        };
         
     }
     
