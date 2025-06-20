@@ -2,8 +2,7 @@
 #include "utils.hpp"
 #include "iostream"
 
-
-glm::vec2 checkIntersect(glm::vec2 obj1Pos1,glm::vec2 obj1Pos2,glm::vec2 obj2Pos1, glm::vec2 obj2Pos2){
+glm::vec2 findT(glm::vec2 obj1Pos1,glm::vec2 obj1Pos2,glm::vec2 obj2Pos1, glm::vec2 obj2Pos2){
     glm::vec2 direction1= obj1Pos2-obj1Pos1;
     glm::vec2 direction2= obj2Pos2-obj2Pos1;
     glm::mat2 myMatrice = glm::mat2(direction1,-direction2);
@@ -12,6 +11,18 @@ glm::vec2 checkIntersect(glm::vec2 obj1Pos1,glm::vec2 obj1Pos2,glm::vec2 obj2Pos
     glm::vec2 result= matriveReverse*originObj1Obj2;
     return result;
 }
+glm::vec2 checkIntersect(glm::vec2 obj1Pos1,glm::vec2 obj1Pos2,glm::vec2 obj2Pos1, glm::vec2 obj2Pos2){
+
+    glm::vec2 t = findT(obj1Pos1,obj1Pos2,obj2Pos1,obj2Pos2);
+    glm::vec2 result= obj1Pos1 +t.x * (obj1Pos2-obj1Pos1);
+    return result;
+}
+
+/*
+glm::vec2 checkCircleIntersect(){
+
+}
+*/
 
 int main()
 {
@@ -98,14 +109,15 @@ int main()
         };
         utils::draw_line(testwall.position1,testwall.position2,testwall.thickness,testwall.color);
         utils::draw_line(testFromMouse.position1,gl::mouse_position(),testFromMouse.thickness,testFromMouse.color);
-        glm::vec2 t = checkIntersect(testwall.position1,testwall.position2,testFromMouse.position1,gl::mouse_position());
-        glm::vec2 intersection = testwall.position1 + t.x* (testwall.position2 - testwall.position1);
+        
+        glm::vec2 intersection = checkIntersect(testwall.position1,testwall.position2,testFromMouse.position1,gl::mouse_position());
+        glm::vec2 t = findT(testwall.position1,testwall.position2,testFromMouse.position1,gl::mouse_position());
 
         if((t.x >=0 && t.x <= 1) && (t.y >=0 && t.y <= 1)){
             utils::draw_disk(intersection,0.01,glm::vec4(0.f,1.f,0.f,1.f));
         }
         
-        
+        std::cout << intersection.x << std::endl;
         
     }
     
