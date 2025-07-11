@@ -86,8 +86,7 @@ int main()
 
         glm::vec4 color = glm::vec4(utils::rand(0,1),utils::rand(0,1),utils::rand(0,1),1);
 
-        float a = utils::rand(0.f, 1.f);
-        float b = utils::rand(0.f, 1.f);
+        
     };
 
     struct wall
@@ -110,7 +109,7 @@ int main()
     
     Parallelogramme maZoneDeSpawn;
     maZoneDeSpawn.origin=glm::vec2(-0.5,0);
-    maZoneDeSpawn.u=glm::vec2(1.f,-0.6);
+    maZoneDeSpawn.u=glm::vec2(1.f,-0.8f);
     maZoneDeSpawn.v=glm::vec2(0.8f,1.f);
     
     
@@ -159,8 +158,9 @@ int main()
             */
 
             
-            
-            glm::vec2 spawnArea=maZoneDeSpawn.origin+i.a*maZoneDeSpawn.u+i.b*maZoneDeSpawn.v;
+            float a = utils::rand(0.f, 1.f);
+            float b = utils::rand(0.f, 1.f);
+            glm::vec2 spawnArea=maZoneDeSpawn.origin+a*maZoneDeSpawn.u+b*maZoneDeSpawn.v;
             utils::draw_disk(spawnArea,i.radius,i.color);
         };
         
