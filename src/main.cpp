@@ -45,8 +45,19 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
+    struct Parallelogramme
+    {
+        glm::vec2 origin;     // Point de départ
+        glm::vec2 u;          // Vecteur côté 1
+        glm::vec2 v;          // Vecteur côté 2
+
+    };
+
     struct particule
     {
+
+        //glm::vec2 position = glm::vec2(utils::rand(-1,1),utils::rand(-1,1));
+
         glm::vec2 position = glm::vec2(utils::rand(-1,1),utils::rand(-1,1));
 
         float random1=utils::rand(0,360);
@@ -74,6 +85,9 @@ int main()
         float currentRadius;
 
         glm::vec4 color = glm::vec4(utils::rand(0,1),utils::rand(0,1),utils::rand(0,1),1);
+
+        float a = utils::rand(0.f, 1.f);
+        float b = utils::rand(0.f, 1.f);
     };
 
     struct wall
@@ -89,10 +103,16 @@ int main()
     
 
     // TODO: create an array of particles
-    std::vector listParticule =  std::vector<particule>(100);
+    std::vector listParticule =  std::vector<particule>(300);
     wall testwall;
     wall testFromMouse;
 
+    
+    Parallelogramme maZoneDeSpawn;
+    maZoneDeSpawn.origin=glm::vec2(-0.5,0);
+    maZoneDeSpawn.u=glm::vec2(1.f,-0.6);
+    maZoneDeSpawn.v=glm::vec2(0.8f,1.f);
+    
     
 
     while (gl::window_is_open())
@@ -105,7 +125,7 @@ int main()
         // TODO update particles
         // TODO render particles
         
-        
+        /*
         utils::draw_line(testwall.position1,testwall.position2,testwall.thickness,testwall.color);
         utils::draw_line(testFromMouse.position1,gl::mouse_position(),testFromMouse.thickness,testFromMouse.color);
         
@@ -115,17 +135,17 @@ int main()
         if((t.x >=0 && t.x <= 1) && (t.y >=0 && t.y <= 1)){
             utils::draw_disk(intersection,0.01,glm::vec4(0.f,1.f,0.f,1.f));
         }
-        
-        std::cout << intersection.x << std::endl;
+        */
 
         for(particule& i : listParticule){
+            /*
             i.currentRadius= i.radius * (1.0f - i.age / i.maximumAge);
             if(i.age < i.maximumAge){
                 utils::draw_disk(i.position,i.currentRadius,i.color);
             }
             i.friction= -i.airFriction * i.velocity;
             i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
-            i.force = i.gravity /*+ i.friction + i.spring*/;
+            i.force = i.gravity + i.friction + i.spring;
             i.acceleration= i.force/ i.mass;
             i.velocity+= i.acceleration * gl::delta_time_in_seconds();
             glm::vec2 tWallPartCheck=findT(testwall.position1,testwall.position2,i.position,(i.position * 1.1f));
@@ -136,8 +156,12 @@ int main()
             
 
             i.age+= gl::delta_time_in_seconds();
+            */
+
             
             
+            glm::vec2 spawnArea=maZoneDeSpawn.origin+i.a*maZoneDeSpawn.u+i.b*maZoneDeSpawn.v;
+            utils::draw_disk(spawnArea,i.radius,i.color);
         };
         
     }
