@@ -32,11 +32,7 @@ glm::vec2 reflectParticule(glm::vec2 wallPos1,glm::vec2 wallPos2,glm::vec2 parti
     return glm::reflect(velocity,normal);
 }
 
-/*
-glm::vec2 checkCircleIntersect(){
 
-}
-*/
 
 int main()
 {
@@ -53,11 +49,14 @@ int main()
 
     };
 
+    struct sphere
+    {
+        glm::vec2 origin;
+        float radius;
+    };
+
     struct particule
     {
-
-        //glm::vec2 position = glm::vec2(utils::rand(-1,1),utils::rand(-1,1));
-
         glm::vec2 position = glm::vec2(utils::rand(-1,1),utils::rand(-1,1));
 
         float random1=utils::rand(0,360);
@@ -102,16 +101,14 @@ int main()
     
 
     // TODO: create an array of particles
-    std::vector listParticule =  std::vector<particule>(300);
+    std::vector listParticule =  std::vector<particule>(5000);
     wall testwall;
     wall testFromMouse;
 
-    
-    Parallelogramme maZoneDeSpawn;
-    maZoneDeSpawn.origin=glm::vec2(-0.5,0);
-    maZoneDeSpawn.u=glm::vec2(1.f,-0.8f);
-    maZoneDeSpawn.v=glm::vec2(0.8f,1.f);
-    
+  
+    sphere maSphereDeSpawn;
+    maSphereDeSpawn.origin=glm::vec2(-0.5,-0.5);
+    maSphereDeSpawn.radius=0.5;
     
 
     while (gl::window_is_open())
@@ -121,47 +118,14 @@ int main()
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // TODO update particles
-        // TODO render particles
         
-        /*
-        utils::draw_line(testwall.position1,testwall.position2,testwall.thickness,testwall.color);
-        utils::draw_line(testFromMouse.position1,gl::mouse_position(),testFromMouse.thickness,testFromMouse.color);
-        
-        glm::vec2 intersection = checkIntersect(testwall.position1,testwall.position2,testFromMouse.position1,gl::mouse_position());
-        glm::vec2 t = findT(testwall.position1,testwall.position2,testFromMouse.position1,gl::mouse_position());
-
-        if((t.x >=0 && t.x <= 1) && (t.y >=0 && t.y <= 1)){
-            utils::draw_disk(intersection,0.01,glm::vec4(0.f,1.f,0.f,1.f));
-        }
-        */
 
         for(particule& i : listParticule){
-            /*
-            i.currentRadius= i.radius * (1.0f - i.age / i.maximumAge);
-            if(i.age < i.maximumAge){
-                utils::draw_disk(i.position,i.currentRadius,i.color);
-            }
-            i.friction= -i.airFriction * i.velocity;
-            i.spring = i.SpringStiffness * (gl::mouse_position() - i.position); 
-            i.force = i.gravity + i.friction + i.spring;
-            i.acceleration= i.force/ i.mass;
-            i.velocity+= i.acceleration * gl::delta_time_in_seconds();
-            glm::vec2 tWallPartCheck=findT(testwall.position1,testwall.position2,i.position,(i.position * 1.1f));
-            if((tWallPartCheck.x >=0 && tWallPartCheck.x <= 1) && (tWallPartCheck.y >=0 && tWallPartCheck.y <= 1)){
-                i.velocity= reflectParticule(testwall.position1,testwall.position2,i.position,i.velocity);
-            }
-            i.position+= i.velocity * gl::delta_time_in_seconds();
-            
-
-            i.age+= gl::delta_time_in_seconds();
-            */
-
-            
-            float a = utils::rand(0.f, 1.f);
-            float b = utils::rand(0.f, 1.f);
-            glm::vec2 spawnArea=maZoneDeSpawn.origin+a*maZoneDeSpawn.u+b*maZoneDeSpawn.v;
-            utils::draw_disk(spawnArea,i.radius,i.color);
+           
+            float angle = utils::rand(0.f, 2.f * 3.141592653589793f);
+            float radius = maSphereDeSpawn.radius * sqrt(utils::rand(0.f, 1.f));
+            i.position = maSphereDeSpawn.origin + glm::vec2(radius * cos(angle), radius * sin(angle));
+            utils::draw_disk(i.position, i.radius, i.color);
         };
         
     }
