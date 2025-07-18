@@ -190,6 +190,7 @@ int main()
         glm::vec2 acceleration;
         glm::vec2 friction;
         glm::vec2 spring;
+        glm::vec2 curveForce;
 
         float maximumAge = utils::rand(5.f,10.f);
         float age = 0.f;
@@ -242,6 +243,11 @@ int main()
     glm::vec2 p1 = glm::vec2(-0.4, 0.8);
     glm::vec2 p2 = glm::vec2(0.4, -0.8);
     glm::vec2 p3 = glm::vec2(0.8, 0.8);
+    
+
+    float curveForceStrength = 2.0f;  
+    float curveForceRange = 0.5f;
+    float curveForceExponent = 1.5f;
 
     bool particulesSpawned=false;
 
@@ -279,22 +285,41 @@ int main()
                 utils::draw_line(previousPoint,point,0.001,glm::vec4(1,1,1,1));
             }
 
+            
             previousPoint = point;
+            /* spawn particules sur courbe
             if(!particulesSpawned){
                 particule& uneParticule = listParticule[i];
                 uneParticule.position= point;
             }
-
+            */
         
 
         };
         for(int i =0; i< listParticule.size()-1 ;i++){
             
             particule& Particule= listParticule[i];
-            Particule.acceleration= normals[i] * 0.5f;
-            Particule.velocity= Particule.acceleration * gl::delta_time_in_seconds();
-            utils::draw_disk(Particule.position,Particule.radius,Particule.color);
-            Particule.position+= Particule.velocity * 10.f * gl::delta_time_in_seconds();
+            float t_closest = findClosestPointMultipleStarts(Particule.position, p0, p1, p2, p3, 5);
+            glm::vec2 point_closest = bezier3(p0, p1, p2, p3, t_closest);
+            glm::vec2 normal = bezier3Normal(p0, p1, p2, p3, t_closest);
+
+
+            float dist = glm::distance(Particule.position, point_closest);
+
+            float forceIntensity = 0.0f;
+            if (dist < curveForceRange) {
+                forceIntensity = curveForceStrength * pow(1.0f - dist / curveForceRange, curveForceExponent);
+            }
+
+            Particule.curveForce = normal * forceIntensity;
+
+            Particule.friction = -Particule.airFriction * Particule.velocity;
+            Particule.force = Particule.gravity + Particule.friction + Particule.curveForce;
+            Particule.acceleration = Particule.force / Particule.mass;
+            Particule.velocity += Particule.acceleration * gl::delta_time_in_seconds();
+            Particule.position += Particule.velocity * gl::delta_time_in_seconds();
+
+            utils::draw_disk(Particule.position, Particule.radius, Particule.color);
             
         }
         particulesSpawned=true;
