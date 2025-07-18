@@ -32,6 +32,59 @@ glm::vec2 reflectParticule(glm::vec2 wallPos1,glm::vec2 wallPos2,glm::vec2 parti
     return glm::reflect(velocity,normal);
 }
 
+void draw_parametric(std::function<glm::vec2(float)> const& parametric)
+{
+    
+}
+
+glm::vec2 lerp(glm::vec2 P1,glm::vec2 P2,float t){
+
+    return P1 +(P2-P1) * t;
+
+}
+
+glm::vec2 deCasteljau(const std::vector<glm::vec2>& points, float t) {
+    if (points.size() == 1) {
+        return points[0];
+    }
+    
+    std::vector<glm::vec2> newPoints;
+    for (size_t i = 0; i < points.size() - 1; i++) {
+        newPoints.push_back(lerp(points[i], points[i+1], t));
+    }
+    
+    return deCasteljau(newPoints, t);
+
+}
+
+glm::vec2 bezier1(glm::vec2 pos1,glm::vec2 pos2,float t){
+    return lerp(pos1,pos2,t);
+}
+
+glm::vec2 bezier2(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, float t) {
+    std::vector<glm::vec2> points = {p0, p1, p2};
+    return deCasteljau(points, t);
+}
+
+glm::vec2 bezier3(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, float t) {
+    std::vector<glm::vec2> points = {p0, p1, p2, p3};
+    return deCasteljau(points, t);
+}
+
+glm::vec2 bezier3Tangent(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, float t) {
+    float t2 = t * t;
+    
+    glm::vec2 tangent = 3.0f * (1.0f - t) * (1.0f - t) * (p1 - p0) +
+                       6.0f * (1.0f - t) * t * (p2 - p1) +
+                       3.0f * t2 * (p3 - p2);
+                       
+    return glm::normalize(tangent);
+}
+
+glm::vec2 bezier3Normal(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, float t) {
+    glm::vec2 tangent = bezier3Tangent(p0, p1, p2, p3, t);
+    return glm::vec2(-tangent.y, tangent.x);
+}
 
 
 int main()
@@ -71,7 +124,7 @@ int main()
         glm::vec2 velocity = glm::vec2(cosResult,resultSin);
         
         float mass = utils::rand(1,5);
-        glm::vec2 gravity = glm::vec2(0,-3.f)*mass;
+        glm::vec2 gravity = glm::vec2(0,-0.5f)*mass;
         glm::vec2 force;
         glm::vec2 acceleration;
         glm::vec2 friction;
@@ -80,11 +133,10 @@ int main()
         float maximumAge = utils::rand(5.f,10.f);
         float age = 0.f;
 
-        float radius=0.015f;
+        float radius=0.01f;
         float currentRadius;
 
         glm::vec4 color = glm::vec4(utils::rand(0,1),utils::rand(0,1),utils::rand(0,1),1);
-
         
     };
 
@@ -101,15 +153,30 @@ int main()
     
 
     // TODO: create an array of particles
-    std::vector listParticule =  std::vector<particule>(5000);
+    std::vector listParticule =  std::vector<particule>(300);
     wall testwall;
     wall testFromMouse;
 
+    
   
     sphere maSphereDeSpawn;
     maSphereDeSpawn.origin=glm::vec2(-0.5,-0.5);
     maSphereDeSpawn.radius=0.5;
     
+
+    std::vector points = std::vector<glm::vec2>(300);
+    std::vector normals = std::vector<glm::vec2>(300);
+
+    glm::vec2 pos1=glm::vec2(-0.5,-0.5);
+    glm::vec2 pos2=glm::vec2(0.5,0.5);
+
+
+
+    glm::vec2 p0 = glm::vec2(-0.8, -0.8);
+    glm::vec2 p2 = glm::vec2(0.4, -0.8);
+    glm::vec2 p3 = glm::vec2(0.8, 0.8);
+
+    bool particulesSpawned=false;
 
     while (gl::window_is_open())
     {
@@ -118,16 +185,50 @@ int main()
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        utils::draw_disk(p0, 0.02f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)); 
+        utils::draw_disk(gl::mouse_position(), 0.02f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)); 
+        utils::draw_disk(p2, 0.02f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)); 
+        utils::draw_disk(p3, 0.02f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+
+        utils::draw_line(p0, gl::mouse_position(), 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+        utils::draw_line(gl::mouse_position(), p2, 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+        utils::draw_line(p2, p3, 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+
+        glm::vec2 previousPoint = glm::vec2(0, 0);
+        
         
 
-        for(particule& i : listParticule){
-           
-            float angle = utils::rand(0.f, 2.f * 3.141592653589793f);
-            float radius = maSphereDeSpawn.radius * sqrt(utils::rand(0.f, 1.f));
-            i.position = maSphereDeSpawn.origin + glm::vec2(radius * cos(angle), radius * sin(angle));
-            utils::draw_disk(i.position, i.radius, i.color);
+        for(int i =0; i< points.size()-1 ;i++){
+            
+            glm::vec2& point= points[i];
+            float t = static_cast<float>(i) /(listParticule.size() -1);
+
+            point = bezier3(p0, gl::mouse_position(), p2,p3, t);
+            normals[i]=bezier3Normal(p0, gl::mouse_position(), p2, p3, t);
+
+
+            if(previousPoint != glm::vec2(0,0)){
+                utils::draw_line(previousPoint,point,0.001,glm::vec4(1,1,1,1));
+            }
+
+            previousPoint = point;
+            if(!particulesSpawned){
+                particule& uneParticule = listParticule[i];
+                uneParticule.position= point;
+            }
+            
+
         };
-        
+        for(int i =0; i< listParticule.size()-1 ;i++){
+            
+            particule& Particule= listParticule[i];
+            Particule.acceleration= normals[i] * 0.5f;
+            Particule.velocity+= Particule.acceleration * gl::delta_time_in_seconds();
+            utils::draw_disk(Particule.position,Particule.radius,Particule.color);
+            Particule.position+= Particule.velocity * gl::delta_time_in_seconds();
+            
+        }
+        particulesSpawned=true;
     }
     
 }
