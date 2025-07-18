@@ -229,9 +229,9 @@ int main()
             
             particule& Particule= listParticule[i];
             Particule.acceleration= normals[i] * 0.5f;
-            Particule.velocity+= Particule.acceleration * gl::delta_time_in_seconds();
+            Particule.velocity= Particule.acceleration * gl::delta_time_in_seconds();
             utils::draw_disk(Particule.position,Particule.radius,Particule.color);
-            Particule.position+= Particule.velocity * gl::delta_time_in_seconds();
+            Particule.position+= Particule.velocity * 10.f * gl::delta_time_in_seconds();
             
         }
         particulesSpawned=true;
