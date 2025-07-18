@@ -92,6 +92,61 @@ glm::vec2 bezier3Normal(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, 
     return glm::vec2(-tangent.y, tangent.x);
 }
 
+float distanceSquared(const glm::vec2& point, const glm::vec2& curvePoint) {
+    return glm::dot(point - curvePoint, point - curvePoint);
+}
+
+float distanceDerivative(const glm::vec2& point, const glm::vec2& p0, const glm::vec2& p1, 
+                         const glm::vec2& p2, const glm::vec2& p3, float t) {
+    glm::vec2 curvePoint = bezier3(p0, p1, p2, p3, t);
+    
+    glm::vec2 tangent = bezier3Tangent(p0, p1, p2, p3, t);
+    
+    return 2.0f * glm::dot(curvePoint - point, tangent);
+}
+
+float findClosestPointGradientDescent(const glm::vec2& point, const glm::vec2& p0, const glm::vec2& p1, 
+                                      const glm::vec2& p2, const glm::vec2& p3, 
+                                      float initialT = 0.5f, int maxIterations = 100) {
+    float t = initialT;
+    float learningRate = 0.1f;
+    float epsilon = 0.0001f;
+    
+    for (int i = 0; i < maxIterations; i++) {
+        float derivative = distanceDerivative(point, p0, p1, p2, p3, t);
+
+        if (std::abs(derivative) < epsilon) {
+            break;
+        }
+        
+        t -= learningRate * derivative;
+        
+        t = glm::clamp(t, 0.0f, 1.0f);
+    }
+    
+    return t;
+}
+
+float findClosestPointMultipleStarts(const glm::vec2& point, const glm::vec2& p0, const glm::vec2& p1, 
+                                     const glm::vec2& p2, const glm::vec2& p3, int numStarts = 10) {
+    float bestT = 0.0f;
+    float minDistance = std::numeric_limits<float>::max();
+    
+    
+    for (int i = 0; i < numStarts; i++) {
+        float initialT = static_cast<float>(i) / (numStarts - 1);
+        float t = findClosestPointGradientDescent(point, p0, p1, p2, p3, initialT);
+        glm::vec2 curvePoint = bezier3(p0, p1, p2, p3, t);
+        float distance = glm::distance(point, curvePoint);
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            bestT = t;
+        }
+    }
+    
+    return bestT;
+}
 
 int main()
 {
@@ -173,12 +228,18 @@ int main()
     std::vector points = std::vector<glm::vec2>(300);
     std::vector normals = std::vector<glm::vec2>(300);
 
+    glm::vec2 targetPoint = glm::vec2(0.0f, 0.0f);
+
+    float closestT = 0.5f;
+    glm::vec2 closestPoint;
+
     glm::vec2 pos1=glm::vec2(-0.5,-0.5);
     glm::vec2 pos2=glm::vec2(0.5,0.5);
 
 
 
     glm::vec2 p0 = glm::vec2(-0.8, -0.8);
+    glm::vec2 p1 = glm::vec2(-0.4, 0.8);
     glm::vec2 p2 = glm::vec2(0.4, -0.8);
     glm::vec2 p3 = glm::vec2(0.8, 0.8);
 
@@ -190,14 +251,15 @@ int main()
         
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT);
+        targetPoint = gl::mouse_position();
 
         utils::draw_disk(p0, 0.02f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)); 
-        utils::draw_disk(gl::mouse_position(), 0.02f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)); 
+        utils::draw_disk(p1, 0.02f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)); 
         utils::draw_disk(p2, 0.02f, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)); 
         utils::draw_disk(p3, 0.02f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
-        utils::draw_line(p0, gl::mouse_position(), 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
-        utils::draw_line(gl::mouse_position(), p2, 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+        utils::draw_line(p0, p1, 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
+        utils::draw_line(p1, p2, 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
         utils::draw_line(p2, p3, 0.005f, glm::vec4(0.5f, 0.5f, 0.5f, 0.5f));
 
         glm::vec2 previousPoint = glm::vec2(0, 0);
@@ -209,8 +271,8 @@ int main()
             glm::vec2& point= points[i];
             float t = static_cast<float>(i) /(listParticule.size() -1);
 
-            point = bezier3(p0, gl::mouse_position(), p2,p3, t);
-            normals[i]=bezier3Normal(p0, gl::mouse_position(), p2, p3, t);
+            point = bezier3(p0, p1, p2,p3, t);
+            normals[i]=bezier3Normal(p0, p1, p2, p3, t);
 
 
             if(previousPoint != glm::vec2(0,0)){
@@ -222,7 +284,8 @@ int main()
                 particule& uneParticule = listParticule[i];
                 uneParticule.position= point;
             }
-            
+
+        
 
         };
         for(int i =0; i< listParticule.size()-1 ;i++){
@@ -235,6 +298,11 @@ int main()
             
         }
         particulesSpawned=true;
+
+        closestT = findClosestPointMultipleStarts(targetPoint, p0, p1, p2, p3, 10);
+        closestPoint = bezier3(p0, p1, p2, p3, closestT);
+        utils::draw_disk(closestPoint, 0.03f, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
+        utils::draw_line(targetPoint, closestPoint, 0.005f, glm::vec4(1.0f, 1.0f, 0.0f, 0.7f));
     }
     
 }
