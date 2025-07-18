@@ -66,10 +66,16 @@ glm::vec2 bezier2(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, float t) {
     return deCasteljau(points, t);
 }
 
+glm::vec2 bernstein2(const glm::vec2& p0,const glm::vec2& p1,const glm::vec2& p2,float t) {
+    float u = 1 - t;
+    return p0 * (u * u) + p1 * (2 * u * t) + p2 * (t * t);
+}
+
 glm::vec2 bezier3(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, float t) {
     std::vector<glm::vec2> points = {p0, p1, p2, p3};
     return deCasteljau(points, t);
 }
+
 
 glm::vec2 bezier3Tangent(glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, float t) {
     float t2 = t * t;
